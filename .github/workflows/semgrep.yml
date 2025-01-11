@@ -20,13 +20,43 @@ jobs:
     container:
       image: returntocorp/semgrep
     steps:
-    - uses: actions/checkout@v4
-    - run: |
-        apk add openjdk17
-        apk add maven
-        ls -l pom.xml
-        semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/search 
-        semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/webmvc 
-        # semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/search --semgrep-repo-display-name=nnayar-semgrep/maven-nested-multi-module-project/project/search
-        # semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/webmvc --semgrep-repo-display-name=nnayar-semgrep/maven-nested-multi-module-project/project/webmvc
-        semgrep ci --allow-local-builds --verbose --supply-chain --exclude=project/search/,project/webmvc/
+      - uses: actions/checkout@v4
+      
+      - name: Install Dependencies
+        run: |
+          apk add openjdk17
+          apk add maven
+          ls -l pom.xml
+
+      - name: Run Semgrep on project/search
+        env:
+          SEMGREP_REPO_DISPLAY_NAME: nnayar-semgrep/maven-nested-multi-module-project/project/search
+        run: semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/search
+        
+      - name: Run Semgrep on project/webmvc
+        env:
+          SEMGREP_REPO_DISPLAY_NAME: nnayar-semgrep/maven-nested-multi-module-project/project/webmvc
+        run: semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/webmvc
+        
+      - name: Run Semgrep excluding search and webmvc
+        run: semgrep ci --allow-local-builds --verbose --supply-chain --exclude=project/search/,project/webmvc/
+
+# jobs:
+#   semgrep:
+#     name: semgrep/ci
+#     runs-on: ubuntu-20.04
+#     env:
+#       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+#     container:
+#       image: returntocorp/semgrep
+#     steps:
+#     - uses: actions/checkout@v4
+#     - run: |
+#         apk add openjdk17
+#         apk add maven
+#         ls -l pom.xml
+#         semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/search 
+#         semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/webmvc 
+#         # semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/search --semgrep-repo-display-name=nnayar-semgrep/maven-nested-multi-module-project/project/search
+#         # semgrep ci --allow-local-builds --verbose --supply-chain --subdir=project/webmvc --semgrep-repo-display-name=nnayar-semgrep/maven-nested-multi-module-project/project/webmvc
+#         semgrep ci --allow-local-builds --verbose --supply-chain --exclude=project/search/,project/webmvc/
