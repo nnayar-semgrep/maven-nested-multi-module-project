@@ -25,4 +25,6 @@ jobs:
         apk add openjdk17
         apk add maven
         ls -l pom.xml
-        semgrep ci --allow-local-builds --verbose --supply-chain
+        semgrep ci --allow-local-builds --verbose --supply-chain --subdir project/search --semgrep-repo-display-name nnayar-semgrep/maven-nested-multi-module-project/project/search
+        semgrep ci --allow-local-builds --verbose --supply-chain --subdir project/webmvc --semgrep-repo-display-name nnayar-semgrep/maven-nested-multi-module-project/project/webmvc
+        semgrep ci --allow-local-builds --verbose --supply-chain --exclude project/search/,project/webmvc/
