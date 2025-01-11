@@ -1,0 +1,48 @@
+name: Semgrep-Subrepo-Scans
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  get-directories:
+    runs-on: ubuntu-latest
+    outputs:
+      dirs: ${{ steps.set-dirs.outputs.dirs }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - id: set-dirs
+        run: |
+          DIRS=$(find . -maxdepth 1 -type d -not -path "." -printf "%P\n" | jq --raw-input --slurp --compact-output 'split("\n")[:-1]')
+          if [ -z "$DIRS" ]; then
+            DIRS="[]"
+          fi
+          echo "dirs=${DIRS}" >> "$GITHUB_OUTPUT"
+
+  semgrep-scan:
+    needs: get-directories
+    name: semgrep/ci
+    runs-on: ubuntu-20.04
+    container:
+      image: returntocorp/semgrep
+    strategy:
+      matrix:
+        directory: ${{ fromJson(needs.get-directories.outputs.dirs) }}
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Dependencies
+        run: |
+          apk add openjdk17
+          apk add maven
+          ls -l pom.xml
+
+      - name: Run Semgrep on ${{ matrix.directory }}
+        env:
+          SEMGREP_REPO_DISPLAY_NAME: nnayar-semgrep/maven-nested-multi-module-project/${{ matrix.directory }}
+        run: semgrep ci --allow-local-builds --verbose --supply-chain --subdir=${{ matrix.directory }}
